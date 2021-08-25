@@ -24,11 +24,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .cors()
-                .and()
+                    .and()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.POST, SIGN_UP_URL).permitAll()
+                .antMatchers( SIGN_UP_URL,"/ping").permitAll()
                 .anyRequest().authenticated()
-                .and()
+                    .and()
                 //.authorizeRequests()
                 //.antMatchers("/","/ping").permitAll()
                 //.and()
