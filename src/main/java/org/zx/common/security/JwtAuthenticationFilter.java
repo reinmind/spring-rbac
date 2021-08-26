@@ -3,7 +3,10 @@ package org.zx.common.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -19,8 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 
-import static org.zx.common.security.code.JWTConst.EXPIRATION_TIME;
-import static org.zx.common.security.code.JWTConst.SECRET;
+import static org.zx.common.security.code.JWTConst.*;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
@@ -32,17 +34,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      */
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
-        setFilterProcessesUrl("/api/login");
+        // 如果不设置这一行，spring会自动创建一个login的controller
+        // 所以不用在controller当中设置login
+        setFilterProcessesUrl(SIGN_UP_URL);
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         try {
             User user = new ObjectMapper().readValue(request.getInputStream(), User.class);
-            if(user == null) return authenticationManager.authenticate(null);
-            return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword(),new ArrayList<>()));
+            String username = user.getUsername();
+            String password = user.getPassword();
+            return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,password, Lists.newArrayList()));
         } catch (IOException e) {
-            throw new RuntimeException();
+            throw new RuntimeException("read password failed");
         }
     }
 
@@ -53,15 +58,15 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      * @param chain
      * @param authResult
      * @throws IOException
-     * @throws ServletException
      */
     @Override
     protected void successfulAuthentication(HttpServletRequest request
             , HttpServletResponse response
             , FilterChain chain
-            , Authentication authResult) throws IOException, ServletException {
+            , Authentication authResult) throws IOException {
         String jwtToken = JWT.create()
                 .withSubject(authResult.getName())
+                .withClaim("role","USER")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SECRET.getBytes(StandardCharsets.UTF_8)));
         String body = authResult.getName() + " " + jwtToken;

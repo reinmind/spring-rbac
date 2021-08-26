@@ -1,9 +1,9 @@
 package org.zx.common.security.code;
 
 public interface JWTConst {
-    int EXPIRATION_TIME = 3600;
+    int EXPIRATION_TIME = 900_000; // 15min;
     String SECRET = "SECRET_KEY";
     String TOKEN_PREFIX = "Bearer ";
     String HEADER_STRING = "Authorization";
-    String SIGN_UP_URL = "/api/user/create";
+    String SIGN_UP_URL = "/api/login";
 }
