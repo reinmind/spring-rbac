@@ -4,29 +4,29 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.zx.common.security.entity.User;
+import org.zx.common.util.ApplicationContextUtil;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Date;
 
-import static org.zx.common.security.code.JWTConst.*;
+import static org.zx.common.security.JWTConst.*;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
-
+    private UserRepository userRepository;
     /**
      * 设置登录重定向
      *
@@ -37,6 +37,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         // 如果不设置这一行，spring会自动创建一个login的controller
         // 所以不用在controller当中设置login
         setFilterProcessesUrl(SIGN_UP_URL);
+        setUserRepository(ApplicationContextUtil.context());
     }
 
     @Override
@@ -45,6 +46,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             User user = new ObjectMapper().readValue(request.getInputStream(), User.class);
             String username = user.getUsername();
             String password = user.getPassword();
+
             return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,password, Lists.newArrayList()));
         } catch (IOException e) {
             throw new RuntimeException("read password failed");
@@ -64,13 +66,18 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             , HttpServletResponse response
             , FilterChain chain
             , Authentication authResult) throws IOException {
+        final String name = authResult.getName();
         String jwtToken = JWT.create()
-                .withSubject(authResult.getName())
-                .withClaim("role","USER")
+                .withSubject(name)
+                .withClaim("role",userRepository.findUserByUsername(name).getRole())
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SECRET.getBytes(StandardCharsets.UTF_8)));
-        String body = authResult.getName() + " " + jwtToken;
+        String body = name + " " + jwtToken;
         response.getWriter().write(body);
         response.getWriter().flush();
+    }
+
+    public void setUserRepository(ApplicationContext ctx) {
+        this.userRepository = ctx.getBean(UserRepository.class);
     }
 }

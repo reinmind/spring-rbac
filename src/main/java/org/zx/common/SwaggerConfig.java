@@ -1,4 +1,4 @@
-package org.zx.common.config;
+package org.zx.common;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package org.zx.common.security.code;
+package org.zx.common.security;
 
 public interface JWTConst {
     int EXPIRATION_TIME = 900_000; // 15min;

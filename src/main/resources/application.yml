@@ -1,3 +1,5 @@
 spring:
   profiles:
-    active: database,redis
+    active: docker,redis
+server:
+  port: 8081
