@@ -20,21 +20,21 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     BCryptPasswordEncoder bCryptPasswordEncoder;
     UserRepository userRepository;
     @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException{
         String username = authentication.getName();
         String rawPasswd = authentication.getCredentials().toString();
 
         final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         final User userByUsername = userRepository.findUserByUsername(username);
         if(userByUsername == null){
-            throw new BizException("user not found");
+            throw new BizException("用户不存在");
         }
         final boolean matches = bCryptPasswordEncoder.matches(rawPasswd, userByUsername.getPassword());
         if(matches) {
             return new UsernamePasswordAuthenticationToken(username, rawPasswd, Collections.emptyList());
         }
         else{
-            throw new RuntimeException("External system authentication failed");
+            throw new BizException("密码错误");
         }
     }
 

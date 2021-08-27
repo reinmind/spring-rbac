@@ -13,3 +13,12 @@ services:
             - MYSQL_PASSWORD=K5bernetes
             - LANG=en_US.UTF-8
             - MYSQL_ROOT_PASSWD=K5bernetes
+    app:
+        image: openjdk:8
+        container_name: rbac_app
+        hostname: app
+        volumes:
+            - "./target:/data"
+        ports:
+            - "8081:8081"
+        entrypoint: ["java","-jar","/data/spring-rbac-1.0.jar"]
