@@ -8,11 +8,11 @@
       <jdbc-url>jdbc:mysql://rm-bp1db5ttsxnkk51p1vo.mysql.rds.aliyuncs.com:3306/rbac</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="rbac@localhost" uuid="968a57ba-ceda-46ac-87ad-3ed9346474af">
+    <data-source source="LOCAL" name="rbac@127.0.0.1" uuid="968a57ba-ceda-46ac-87ad-3ed9346474af">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:3306/rbac</jdbc-url>
+      <jdbc-url>jdbc:mysql://127.0.0.1:3306/rbac</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
