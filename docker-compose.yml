@@ -12,7 +12,8 @@ services:
             - MYSQL_USER=reinmind
             - MYSQL_PASSWORD=K5bernetes
             - LANG=en_US.UTF-8
-            - MYSQL_ROOT_PASSWD=K5bernetes
+            - MYSQL_ROOT_PASSWORD=K5bernetes
+            - MYSQL_ROOT_HOST=%
     app:
         image: openjdk:8
         container_name: rbac_app
