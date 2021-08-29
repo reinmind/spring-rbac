@@ -42,7 +42,9 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         }
 
         UsernamePasswordAuthenticationToken authenticationToken = getAuthentication(request);
-
+        if(authenticationToken != null){
+            super.onSuccessfulAuthentication(request,response,authenticationToken);
+        }
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         chain.doFilter(request,response);
@@ -58,20 +60,19 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
         if(token != null){
             try {
-                DecodedJWT decodedJWT ;
-                decodedJWT = JWT.require(Algorithm.HMAC512(SECRET.getBytes()))
+                DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(SECRET.getBytes()))
                         .build()
                         .verify(token.replace(TOKEN_PREFIX, ""));
                 String username = decodedJWT.getSubject();
                 final String role = userRepository.findUserByUsername(username).getRole();
                 ArrayList<GrantedAuthority> es = Lists.newArrayList((GrantedAuthority) role::toString);
                 if(username != null){
+
                     return new UsernamePasswordAuthenticationToken(username, null, es);
                 }
             }catch (RuntimeException exception){
                 logger.info("token time expire");
             }
-            // 从token获取role是不合理的，虽然角色是服务器颁发的，但是如果token的密码泄露，就能够解析现在的密码
 
             return null;
         }

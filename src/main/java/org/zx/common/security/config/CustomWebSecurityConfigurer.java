@@ -1,17 +1,13 @@
 package org.zx.common.security.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.zx.common.security.CustomAuthenticationEntryPoint;
 import org.zx.common.security.JwtAuthenticationFilter;
@@ -27,13 +23,13 @@ import static org.zx.common.security.JWTConst.SIGN_UP_URL;
 @Slf4j
 public class CustomWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
-    BCryptPasswordEncoder encoder;
-    UserRepository userRepository;
-    DataSource dataSource;
     CustomAuthenticationEntryPoint authenticationEntryPoint;
+    CustomAuthenticationProvider customAuthenticationProvider;
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .cors()
+                .and()
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/info").hasAnyAuthority("ADMIN")
@@ -60,14 +56,12 @@ public class CustomWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) {
-        auth.authenticationProvider(new CustomAuthenticationProvider(encoder,userRepository));
+        auth.authenticationProvider(this.customAuthenticationProvider);
     }
 
     @Autowired
-    public CustomWebSecurityConfigurer(BCryptPasswordEncoder encoder, UserRepository userRepository, DataSource dataSource, CustomAuthenticationEntryPoint authenticationEntryPoint) {
-        this.encoder = encoder;
-        this.userRepository = userRepository;
-        this.dataSource = dataSource;
+    public CustomWebSecurityConfigurer(CustomAuthenticationEntryPoint authenticationEntryPoint,CustomAuthenticationProvider customAuthenticationProvider) {
         this.authenticationEntryPoint = authenticationEntryPoint;
+        this.customAuthenticationProvider = customAuthenticationProvider;
     }
 }
