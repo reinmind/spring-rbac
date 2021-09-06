@@ -12,6 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.stereotype.Component;
+import org.zx.common.exception.BizException;
+import org.zx.common.security.service.RedisService;
 import org.zx.common.util.ApplicationContextUtil;
 
 import javax.servlet.FilterChain;
@@ -25,10 +27,11 @@ import static org.zx.common.security.JWTConst.*;
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
     private UserRepository userRepository;
-
+    private RedisService redisService;
     public JwtAuthorizationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
         setUserRepository(ApplicationContextUtil.context());
+        setRedisService(ApplicationContextUtil.context());
     }
 
     @Override
@@ -64,21 +67,28 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                         .build()
                         .verify(token.replace(TOKEN_PREFIX, ""));
                 String username = decodedJWT.getSubject();
+                SessionToken sessionToken = redisService.get(username);
+                // 校验redis当中缓存的session信息
+                if(sessionToken == null || !(token.replace(TOKEN_PREFIX,"")).equals(sessionToken.getToken())){
+                    throw new BizException("token 失效，请重新登录");
+                }
+                // 校验数据库中的用户信息
                 final String role = userRepository.findUserByUsername(username).getRole();
                 ArrayList<GrantedAuthority> es = Lists.newArrayList((GrantedAuthority) role::toString);
                 if(username != null){
-
                     return new UsernamePasswordAuthenticationToken(username, null, es);
                 }
             }catch (RuntimeException exception){
-                logger.info("token time expire");
+                logger.info("token失效");
             }
-
             return null;
         }
         return null;
     }
     public void setUserRepository(ApplicationContext ctx) {
         this.userRepository = ctx.getBean(UserRepository.class);
+    }
+    public void setRedisService(ApplicationContext ctx){
+        this.redisService = ctx.getBean(RedisService.class);
     }
 }

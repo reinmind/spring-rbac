@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.zx.common.exception.BizException;
+import org.zx.common.security.service.RedisService;
 import org.zx.common.util.ApplicationContextUtil;
 
 import javax.servlet.FilterChain;
@@ -27,6 +29,7 @@ import static org.zx.common.security.JWTConst.*;
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private UserRepository userRepository;
+    private RedisService redisService;
     /**
      * 设置登录重定向
      *
@@ -38,6 +41,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         // 所以不用在controller当中设置login
         setFilterProcessesUrl(SIGN_UP_URL);
         setUserRepository(ApplicationContextUtil.context());
+        setRedisService(ApplicationContextUtil.context());
     }
 
     @Override
@@ -50,7 +54,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             super.setDetails(request,authRequest);
             return authenticationManager.authenticate(authRequest);
         } catch (IOException e) {
-            throw new RuntimeException("read password failed");
+            throw new BizException("登录请求格式错误");
         }
     }
 
@@ -74,11 +78,17 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SECRET.getBytes(StandardCharsets.UTF_8)));
         String body = name + " " + jwtToken;
+        redisService.save(SessionToken.builder().
+                name(name).token(jwtToken).build());
         response.getWriter().write(body);
         response.getWriter().flush();
     }
 
     public void setUserRepository(ApplicationContext ctx) {
         this.userRepository = ctx.getBean(UserRepository.class);
+    }
+
+    public void setRedisService(ApplicationContext ctx){
+        this.redisService = ctx.getBean(RedisService.class);
     }
 }

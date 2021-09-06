@@ -33,7 +33,8 @@ public class CustomWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/info").hasAnyAuthority("ADMIN")
-                .antMatchers(HttpMethod.POST, SIGN_UP_URL,"/user/*").permitAll().anyRequest().authenticated()
+                .antMatchers(SIGN_UP_URL,"/user/*","/actuator","/actuator/**","/*/api-docs","/swagger-ui.html"
+                        ,"/swagger-ui/**","/swagger-ui","/swagger-resources/configuration/**").permitAll().anyRequest().authenticated()
                 .and()
                 .addFilter(new JwtAuthenticationFilter(authenticationManager()))
                 .addFilter(new JwtAuthorizationFilter(authenticationManager()))
