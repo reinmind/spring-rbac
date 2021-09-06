@@ -7,16 +7,14 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.zx.common.exception.BizException;
-import org.zx.common.security.User;
+import org.zx.common.security.entity.User;
 import org.zx.common.security.UserRepository;
-import javax.servlet.http.HttpServletRequest;
+
 import javax.transaction.Transactional;
 import java.util.Map;
 
 import static org.zx.common.security.JWTConst.SECRET;
-import static org.zx.common.security.JWTConst.TOKEN_PREFIX;
 
 /**
  * @author xiang.zhang

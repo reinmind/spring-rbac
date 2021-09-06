@@ -1,14 +1,10 @@
 package org.zx.common.security.controller;
 
-import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.zx.common.BaseResponse;
-import org.zx.common.security.User;
+import org.zx.common.security.entity.User;
 import org.zx.common.security.service.UserService;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 
 /**
  * @author xiang.zhang

@@ -4,6 +4,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+      
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://rm-bp1db5ttsxnkk51p1vo.mysql.rds.aliyuncs.com:3306/rbac

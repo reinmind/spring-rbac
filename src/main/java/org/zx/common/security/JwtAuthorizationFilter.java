@@ -2,17 +2,20 @@ package org.zx.common.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.collect.Lists;
+import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.stereotype.Component;
 import org.zx.common.exception.BizException;
+import org.zx.common.security.entity.Auth;
+import org.zx.common.security.entity.CustomUserDetails;
+import org.zx.common.security.entity.User;
 import org.zx.common.security.service.RedisService;
 import org.zx.common.util.ApplicationContextUtil;
 
@@ -22,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.zx.common.security.JWTConst.*;
 
@@ -73,10 +78,26 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                     throw new BizException("token 失效，请重新登录");
                 }
                 // 校验数据库中的用户信息
-                final String role = userRepository.findUserByUsername(username).getRole();
-                ArrayList<GrantedAuthority> es = Lists.newArrayList((GrantedAuthority) role::toString);
+                User user = userRepository.findUserByUsername(username);
+                String role = user.getRole();
+                // TODO: lazy initialization bug
+                final List<Auth> auths = user.getAuthorities();
+                Hibernate.initialize(user.getAuthorities());
+                List<SimpleGrantedAuthority> temp = new ArrayList<>();
+                for(Auth auth:auths){
+                    temp.add(new SimpleGrantedAuthority(auth.getAuthority()));
+                }
                 if(username != null){
-                    return new UsernamePasswordAuthenticationToken(username, null, es);
+                    final CustomUserDetails customUserDetails = new CustomUserDetails();
+
+                    customUserDetails.setUsername(user.getUsername());
+                    customUserDetails.setPassword(user.getPassword());
+                    customUserDetails.setExpired(false);
+                    customUserDetails.setEnable(user.isEnabled());
+                    customUserDetails.setEmail(user.getEmail());
+                    customUserDetails.setRole(user.getRole());
+
+                    return new UsernamePasswordAuthenticationToken(username, null, temp);
                 }
             }catch (RuntimeException exception){
                 logger.info("token失效");

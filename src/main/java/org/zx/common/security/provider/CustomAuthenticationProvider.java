@@ -2,6 +2,7 @@ package org.zx.common.security.provider;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,10 +12,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 import org.zx.common.exception.BizException;
-import org.zx.common.security.User;
+import org.zx.common.security.entity.CustomUserDetails;
+import org.zx.common.security.entity.User;
 import org.zx.common.security.UserRepository;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,7 +45,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         }
         final boolean matches = bCryptPasswordEncoder.matches(rawPasswd, userByUsername.getPassword());
         if(matches) {
-            return new UsernamePasswordAuthenticationToken(username, rawPasswd, Collections.emptyList());
+            final UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, rawPasswd, Collections.emptyList());
+            return authenticationToken;
         }
         else{
             throw new BizException("密码错误");

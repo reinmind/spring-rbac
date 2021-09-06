@@ -14,6 +14,7 @@ import org.zx.common.security.JwtAuthenticationFilter;
 import org.zx.common.security.JwtAuthorizationFilter;
 import org.zx.common.security.UserRepository;
 import org.zx.common.security.provider.CustomAuthenticationProvider;
+import org.zx.common.security.service.CustomUserDetailsService;
 
 import javax.sql.DataSource;
 
@@ -25,6 +26,7 @@ public class CustomWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
     CustomAuthenticationEntryPoint authenticationEntryPoint;
     CustomAuthenticationProvider customAuthenticationProvider;
+    CustomUserDetailsService customUserDetailsService;
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -56,13 +58,15 @@ public class CustomWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 //    }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-        auth.authenticationProvider(this.customAuthenticationProvider);
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(this.customAuthenticationProvider)
+                .userDetailsService(this.customUserDetailsService);
     }
 
     @Autowired
-    public CustomWebSecurityConfigurer(CustomAuthenticationEntryPoint authenticationEntryPoint,CustomAuthenticationProvider customAuthenticationProvider) {
+    public CustomWebSecurityConfigurer(CustomAuthenticationEntryPoint authenticationEntryPoint, CustomAuthenticationProvider customAuthenticationProvider, CustomUserDetailsService customUserDetailsService) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.customAuthenticationProvider = customAuthenticationProvider;
+        this.customUserDetailsService = customUserDetailsService;
     }
 }
