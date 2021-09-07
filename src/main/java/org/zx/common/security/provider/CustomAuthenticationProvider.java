@@ -45,8 +45,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         }
         final boolean matches = bCryptPasswordEncoder.matches(rawPasswd, userByUsername.getPassword());
         if(matches) {
-            final UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, rawPasswd, Collections.emptyList());
-            return authenticationToken;
+            return new UsernamePasswordAuthenticationToken(username, rawPasswd, Collections.emptyList());
         }
         else{
             throw new BizException("密码错误");
@@ -61,6 +60,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     public CustomAuthenticationProvider(BCryptPasswordEncoder bCryptPasswordEncoder, UserRepository userRepository) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.userRepository = userRepository;
-        this.allowedIps = Collections.singletonList("127.0.0.1");
+        // this.allowedIps = Collections.singletonList("127.0.0.1");
     }
 }

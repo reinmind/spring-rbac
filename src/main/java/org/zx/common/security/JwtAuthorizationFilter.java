@@ -3,7 +3,6 @@ package org.zx.common.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.common.collect.Lists;
 import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +12,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.zx.common.exception.BizException;
-import org.zx.common.security.entity.Auth;
 import org.zx.common.security.entity.CustomUserDetails;
 import org.zx.common.security.entity.User;
 import org.zx.common.security.service.RedisService;
@@ -21,12 +19,12 @@ import org.zx.common.util.ApplicationContextUtil;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.zx.common.security.JWTConst.*;
 
@@ -59,13 +57,19 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     /**
-     *  解析token信息
+     * 解析token信息
      * @param request
      * @return
      */
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request){
-        String token = request.getHeader(HEADER_STRING);
-
+        Cookie[] cookies = request.getCookies();
+        Map<String, String> collect = null;
+        String token = null;
+        if(cookies!=null){
+            collect = Arrays.stream(cookies).collect(Collectors.toMap(Cookie::getName, Cookie::getValue));
+            token = collect.get("TOKEN");
+        }
+        // String token = request.getHeader(HEADER_STRING);
         if(token != null){
             try {
                 DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(SECRET.getBytes()))
@@ -79,25 +83,21 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                 }
                 // 校验数据库中的用户信息
                 User user = userRepository.findUserByUsername(username);
-                String role = user.getRole();
-                // TODO: lazy initialization bug
-                final List<Auth> auths = user.getAuthorities();
-                Hibernate.initialize(user.getAuthorities());
-                List<SimpleGrantedAuthority> temp = new ArrayList<>();
-                for(Auth auth:auths){
-                    temp.add(new SimpleGrantedAuthority(auth.getAuthority()));
-                }
+                final List<String> auths = user.getAuthorities();
+                List<GrantedAuthority> temp = new ArrayList<>();
+                auths.forEach(o -> temp.add((GrantedAuthority)() -> o));
                 if(username != null){
                     final CustomUserDetails customUserDetails = new CustomUserDetails();
-
+                    customUserDetails.setAuthorities(temp);
                     customUserDetails.setUsername(user.getUsername());
                     customUserDetails.setPassword(user.getPassword());
                     customUserDetails.setExpired(false);
                     customUserDetails.setEnable(user.isEnabled());
                     customUserDetails.setEmail(user.getEmail());
                     customUserDetails.setRole(user.getRole());
-
-                    return new UsernamePasswordAuthenticationToken(username, null, temp);
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, null, temp);
+                    authenticationToken.setDetails(customUserDetails);
+                    return authenticationToken;
                 }
             }catch (RuntimeException exception){
                 logger.info("token失效");
@@ -106,9 +106,11 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         }
         return null;
     }
+
     public void setUserRepository(ApplicationContext ctx) {
         this.userRepository = ctx.getBean(UserRepository.class);
     }
+
     public void setRedisService(ApplicationContext ctx){
         this.redisService = ctx.getBean(RedisService.class);
     }

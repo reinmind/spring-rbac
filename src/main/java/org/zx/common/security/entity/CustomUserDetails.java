@@ -19,13 +19,13 @@ public class CustomUserDetails implements UserDetails {
     String username;
     boolean expired;
     boolean enable;
-    List<String> auths;
+    List<GrantedAuthority> authorities;
     String role;
     String email;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities();
+        return authorities;
     }
 
     @Override
@@ -58,9 +58,4 @@ public class CustomUserDetails implements UserDetails {
         return enable;
     }
 
-    private List<GrantedAuthority> authorities(){
-        List<GrantedAuthority> temp = new ArrayList<>(Collections.emptyList());
-        auths.forEach(o -> temp.add((GrantedAuthority) () -> o));
-        return temp;
-    }
 }

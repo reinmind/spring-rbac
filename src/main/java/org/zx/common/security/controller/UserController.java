@@ -6,11 +6,15 @@ import org.zx.common.BaseResponse;
 import org.zx.common.security.entity.User;
 import org.zx.common.security.service.UserService;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author xiang.zhang
  */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController extends BaseController {
     UserService userService;
 
@@ -27,8 +31,15 @@ public class UserController extends BaseController {
     }
 
     @GetMapping("/logout")
-    public BaseResponse<Object> logout(@RequestHeader("Authorization")String token){
-        userService.logout(token);
+    public BaseResponse<Object> logout(HttpServletRequest request,HttpServletResponse response){
+        // invalid cookie
+        Cookie[] cookies = request.getCookies();
+        for(Cookie cookie: cookies){
+            cookie.setMaxAge(0);
+            String token = cookie.getValue();
+            userService.logout(token);
+            response.addCookie(cookie);
+        }
         return success("success");
     }
 

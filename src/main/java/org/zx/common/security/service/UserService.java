@@ -10,10 +10,8 @@ import org.springframework.stereotype.Service;
 import org.zx.common.exception.BizException;
 import org.zx.common.security.entity.User;
 import org.zx.common.security.UserRepository;
-
 import javax.transaction.Transactional;
 import java.util.Map;
-
 import static org.zx.common.security.JWTConst.SECRET;
 
 /**
@@ -56,6 +54,7 @@ public class UserService {
                 .build()
                 .verify(s[1]);
         String username = decodedJWT.getSubject();
+        // invalid redis
         this.redisService.delete(username);
     }
 

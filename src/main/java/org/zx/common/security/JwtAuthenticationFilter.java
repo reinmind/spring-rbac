@@ -16,6 +16,7 @@ import org.zx.common.security.service.RedisService;
 import org.zx.common.util.ApplicationContextUtil;
 
 import javax.servlet.FilterChain;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -75,10 +76,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .withClaim("role",userRepository.findUserByUsername(name).getRole())
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SECRET.getBytes(StandardCharsets.UTF_8)));
-        String body = name + " " + jwtToken;
+        Cookie cookie = new Cookie("TOKEN", jwtToken);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
         redisService.save(SessionToken.builder().
                 name(name).token(jwtToken).build());
-        response.getWriter().write(body);
+        response.getWriter().write(name + " success login");
         response.getWriter().flush();
     }
 

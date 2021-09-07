@@ -21,8 +21,8 @@ public class User {
     String nickname;
     String password;
     String role;
-    @ElementCollection
-    List<Auth> authorities;
+    @ElementCollection(fetch = FetchType.EAGER)
+    List<String> authorities;
     String email;
     @ColumnDefault(value = "true")
     boolean enabled;

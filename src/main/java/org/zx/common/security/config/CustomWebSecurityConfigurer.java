@@ -34,7 +34,7 @@ public class CustomWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/info").hasAnyAuthority("ADMIN")
+                .antMatchers("/api/info").hasAnyAuthority("ADMIN")
                 .antMatchers(SIGN_UP_URL,"/user/*","/actuator","/actuator/**","/*/api-docs","/swagger-ui.html"
                         ,"/swagger-ui/**","/swagger-ui","/swagger-resources/configuration/**").permitAll().anyRequest().authenticated()
                 .and()
