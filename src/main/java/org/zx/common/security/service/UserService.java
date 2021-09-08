@@ -48,11 +48,10 @@ public class UserService {
         return stringObjectMapper;
     }
 
-    public void logout(String token){
-        String[] s = token.split(" ");
+    public void invalidCache(String token){
         DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(SECRET.getBytes()))
                 .build()
-                .verify(s[1]);
+                .verify(token);
         String username = decodedJWT.getSubject();
         // invalid redis
         this.redisService.delete(username);

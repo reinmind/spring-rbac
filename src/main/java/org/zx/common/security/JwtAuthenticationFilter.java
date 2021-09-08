@@ -77,6 +77,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SECRET.getBytes(StandardCharsets.UTF_8)));
         Cookie cookie = new Cookie("TOKEN", jwtToken);
+        // 设置cookie的过期时间为7天
+        cookie.setMaxAge(7 * 24 * 60 * 60);
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
         redisService.save(SessionToken.builder().
